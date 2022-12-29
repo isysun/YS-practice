@@ -67,12 +67,17 @@ ClassMethod NewPatient()
 		set PAPERName = ##class(%PopulateUtils).FirstName() //ID: 11480
 		set PAPERName2 = ##class(%PopulateUtils).LastName()
 		set CTSEXDesc = "Female"
-		set PAPERDob = "21/2/2000"
+		set PAPERDob = "20/2/2000"
+		set INSTDesc = "BUPA Australia"
+		set AUXITDesc = "BUP Basic"
+
 		set request = ##class(CDUI.Demo.Request.NewPatient).%New()
 		set request.PAPERName = PAPERName
 		set request.PAPERName2 = PAPERName2
 		set request.CTSEXDesc = CTSEXDesc
 		set request.PAPERDob = PAPERDob
+		set request.INSTDesc = INSTDesc
+		set request.AUXITDesc = AUXITDesc
 
 		set sc = ##class(Ens.Director).CreateBusinessService("CDUI.Demo.Service.Adaptorless",.svc)
 		set sc = $$$ADDSC(sc,svc.ProcessInput(request,.response))
@@ -85,6 +90,10 @@ ClassMethod NewPatient()
 
 	}		
 		quit sc
+}
+
+ClassMethod ListInsurance()
+{
 }
 
 }

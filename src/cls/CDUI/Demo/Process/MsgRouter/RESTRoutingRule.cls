@@ -24,7 +24,7 @@ XData RuleDefinition [ XMLNamespace = "http://www.intersystems.com/rule" ]
 <return></return>
 </when>
 </rule>
-<rule name="" disabled="true">
+<rule name="NewLocation">
 <constraint name="source" value="CDUI.Demo.Service.Adaptorless"></constraint>
 <constraint name="msgClass" value="CDUI.Demo.Request.NewLocation"></constraint>
 <when condition="1">
