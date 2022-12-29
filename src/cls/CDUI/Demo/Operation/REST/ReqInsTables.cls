@@ -1,4 +1,4 @@
-Class CDUI.Demo.Operation.REST.ReqTables Extends EnsLib.REST.Operation
+Class CDUI.Demo.Operation.REST.ReqInsTables Extends EnsLib.REST.Operation
 {
 
 XData MessageMap
@@ -14,7 +14,7 @@ Parameter ADAPTER As STRING = "CDUI.Demo.HTTP.OutboundAdaptor";
 
 Parameter INVOCATION = "Queue";
 
-Method ReqInsTables(Request As CDUI.Demo.Operation.REST.ReqTables, Output Response As Ens.StringResponse) As %Status
+Method ReqInsTables(Request As CDUI.Demo.Request.ReqInsTables, Output Response As Ens.StringResponse) As %Status
 {
     #dim sc as %Status = $$$OK
     #dim UrlParams, json, value as %String = ""

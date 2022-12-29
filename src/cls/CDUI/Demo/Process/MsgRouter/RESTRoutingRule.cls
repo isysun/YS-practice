@@ -32,6 +32,14 @@ XData RuleDefinition [ XMLNamespace = "http://www.intersystems.com/rule" ]
 <return></return>
 </when>
 </rule>
+<rule name="ListInsurance">
+<constraint name="source" value="CDUI.Demo.Service.Adaptorless"></constraint>
+<constraint name="msgClass" value="CDUI.Demo.Request.ReqInsTables"></constraint>
+<when condition="1">
+<send transform="" target="CDUI.Demo.Operation.REST.ReqInsTables"></send>
+<return></return>
+</when>
+</rule>
 </ruleSet>
 </ruleDefinition>
 }

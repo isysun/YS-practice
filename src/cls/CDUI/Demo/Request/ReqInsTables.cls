@@ -1,4 +1,4 @@
-Class cls.CDUI.Demo.Request.ReqTables Extends (Ens.Request, %JSON.Adaptor)
+Class CDUI.Demo.Request.ReqInsTables Extends (Ens.Request, %JSON.Adaptor)
 {
 
 Property INSTDesc As %String;
@@ -13,8 +13,8 @@ Method SerialisedGet() As %RawString
 
 Storage Default
 {
-<Data name="ReqTablesDefaultData">
-<Subscript>"ReqTables"</Subscript>
+<Data name="ReqInsTablesDefaultData">
+<Subscript>"ReqInsTables"</Subscript>
 <Value name="1">
 <Value>INSTDesc</Value>
 </Value>
@@ -22,7 +22,7 @@ Storage Default
 <Value>AUXITDesc</Value>
 </Value>
 </Data>
-<DefaultData>ReqTablesDefaultData</DefaultData>
+<DefaultData>ReqInsTablesDefaultData</DefaultData>
 <Type>%Storage.Persistent</Type>
 }
 
