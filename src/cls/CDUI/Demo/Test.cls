@@ -3,6 +3,8 @@ Include %syPrompt
 Class CDUI.Demo.Test
 {
 
+Property InsuranceTable As %String;
+
 ClassMethod List(StartsWith As %String = "", PageSize As %Integer = "", ByRef Page As %Integer = "", ByRef Results) As %Status
 {
 	set request = ##class(CDUI.Demo.Request.Location).%New()
@@ -100,18 +102,14 @@ ClassMethod ListInsurance()
 	if $$$ISOK(sc)
 	{
 		set json = {}.%FromJSON(response.StringValue)
-		set results = json.results
-		//write sc,! 
-		//zwrite results
-		set i = ""
-		for
-		{
-			set i = $order(results(i),1,insList)
-			write i,!
-			quit:i=""
-			set AUXIT = $listget(insList,3)
-			write AUXIT,!
+		set iterator = json.results.%GetIterator()
+		while iterator.%GetNext(.key,.value)
+		{	
+			set innerList = $LISTBUILD(value.AUXITDesc,value.AUXITInsTypeDR)
+			set $LIST(testList,key) = innerList		
 		}
+		set InsuranceTable = testList
+		write $LIST(InsuranceTable,1)
 	}
 	quit sc
 }
