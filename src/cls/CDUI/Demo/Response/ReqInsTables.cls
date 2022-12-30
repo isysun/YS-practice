@@ -1,7 +1,7 @@
 Class CDUI.Demo.Response.ReqInsTables Extends %RegisteredObject
 {
 
-Property INSTDesc As %String;
+Property AUXITInsTypeDR As %String;
 
 Property AUXITDesc As %String;
 

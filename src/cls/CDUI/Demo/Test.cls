@@ -100,8 +100,18 @@ ClassMethod ListInsurance()
 	if $$$ISOK(sc)
 	{
 		set json = {}.%FromJSON(response.StringValue)
-		write sc,! 
-		zwrite json
+		set results = json.results
+		//write sc,! 
+		//zwrite results
+		set i = ""
+		for
+		{
+			set i = $order(results(i),1,insList)
+			write i,!
+			quit:i=""
+			set AUXIT = $listget(insList,3)
+			write AUXIT,!
+		}
 	}
 	quit sc
 }
