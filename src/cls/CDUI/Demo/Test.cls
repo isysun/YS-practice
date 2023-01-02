@@ -64,21 +64,23 @@ ClassMethod NewLocation()
 ClassMethod NewPatient() As %List
 {
 	set patientIDList = $LISTBUILD()
+	set sc = ..ListInsurance(.insuranceList)
 	for i = 1:1:3{
 		set PAPERName = ##class(%PopulateUtils).FirstName() //ID: 11480
 		set PAPERName2 = ##class(%PopulateUtils).LastName()
 		set CTSEXDesc = "Female"
 		set PAPERDob = "10/2/2000"
-		set INSTDesc = "BUPA Australia"
-		set AUXITDesc = "BUP Basic"
+		//set INSTDesc = "BUPA Australia"
+		set insuranceRecord = insuranceList.GetAt(##class(%PopulateUtils).Random(insuranceList.Count()-1) + 1)
+		//set AUXITDesc = "BUP Basic"
 
 		set request = ##class(CDUI.Demo.Request.NewPatient).%New()
 		set request.PAPERName = PAPERName
 		set request.PAPERName2 = PAPERName2
 		set request.CTSEXDesc = CTSEXDesc
 		set request.PAPERDob = PAPERDob
-		set request.INSTDesc = INSTDesc
-		set request.AUXITDesc = AUXITDesc
+		set request.INSTDesc = insuranceRecord.AUXITInsTypeDR
+		set request.AUXITDesc = insuranceRecord.AUXITDesc
 
 		set sc = ##class(Ens.Director).CreateBusinessService("CDUI.Demo.Service.Adaptorless",.svc)
 		set sc = $$$ADDSC(sc,svc.ProcessInput(request,.response))
