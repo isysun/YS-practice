@@ -114,4 +114,29 @@ ClassMethod ListInsurance()
 	quit sc
 }
 
+ClassMethod NewEpisode()
+{
+	set PatientID = "testid"
+	set CTLOCDesc = "Admissions H1"
+	set PAADMType = "E"
+	set PAADMAdmDate = "20/10/2022"
+	set PAADMAdmTime = "testtime"
+
+	set request = ##class(CDUI.Demo.Request.NewEpisode).%New()
+	set request.PatientID = PatientID
+	set request.CTLOCDesc = CTLOCDesc
+	set request.PAADMType = PAADMType
+	set request.PAADMAdmDate = PAADMAdmDate
+	set request.PAADMAdmTime = PAADMAdmTime
+
+	set sc = ##class(Ens.Director).CreateBusinessService("CDUI.Demo.Service.Adaptorless",.svc)
+	set sc = $$$ADDSC(sc,svc.ProcessInput(request,.response))
+	if $$$ISOK(sc)
+	{
+		set json = {}.%FromJSON(response.StringValue)
+		zwrite response
+		write !,"Created ID "_json.ID
+	}
+}
+
 }

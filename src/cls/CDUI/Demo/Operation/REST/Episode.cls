@@ -15,7 +15,7 @@ Parameter ADAPTER As STRING = "CDUI.Demo.HTTP.OutboundAdaptor";
 /// 2 modes: Queue, InProc
 Parameter INVOCATION = "Queue";
 
-Method createNewEpisode(Request As CDUI.Demo.Operation.REST.Episode, Output Response As Ens.StringResponse) As %Status
+Method createNewEpisode(Request As CDUI.Demo.Request.NewEpisode, Output Response As Ens.StringResponse) As %Status
 {
 	#dim sc as %Status = $$$OK
 	#dim UrlParams, json, value as %String = ""
