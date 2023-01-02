@@ -95,9 +95,9 @@ ClassMethod NewPatient() As %List
 	return patientIDList
 }
 
-ClassMethod ListInsurance()
+ClassMethod ListInsurance(ByRef resultList) As %Status
 {
-	set ResultList = ##class(%ListOfDataTypes).%New()
+	set resultList = ##class(%ListOfObjects).%New()
 
 	set request = ##class(CDUI.Demo.Request.ReqInsTables).%New()
 	set sc = ##class(Ens.Director).CreateBusinessService("CDUI.Demo.Service.Adaptorless",.svc)
@@ -109,12 +109,11 @@ ClassMethod ListInsurance()
 		set iterator = json.results.%GetIterator()
 		while iterator.%GetNext(.key,.value)
 		{	
-			set innerList = $LISTBUILD(value.AUXITDesc,value.AUXITInsTypeDR)
-			do ResultList.insert()		
+			do resultList.Insert(value)		
 		}
-		set InsuranceTable = testList
-		write $LIST(InsuranceTable,1)
 	}
+	write !, resultList.GetAt(1).AUXITInsTypeDR
+	write !, resultList.Count()
 	quit sc
 }
 
