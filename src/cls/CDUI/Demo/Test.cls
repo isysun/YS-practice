@@ -3,8 +3,6 @@ Include %syPrompt
 Class CDUI.Demo.Test
 {
 
-Property InsuranceTable As %String;
-
 ClassMethod List(StartsWith As %String = "", PageSize As %Integer = "", ByRef Page As %Integer = "", ByRef Results) As %Status
 {
 	set request = ##class(CDUI.Demo.Request.Location).%New()
@@ -63,8 +61,9 @@ ClassMethod NewLocation()
 	quit sc
 }
 
-ClassMethod NewPatient()
+ClassMethod NewPatient() As %List
 {
+	set patientIDList = $LISTBUILD()
 	for i = 1:1:3{
 		set PAPERName = ##class(%PopulateUtils).FirstName() //ID: 11480
 		set PAPERName2 = ##class(%PopulateUtils).LastName()
@@ -86,27 +85,32 @@ ClassMethod NewPatient()
 		if $$$ISOK(sc)
 		{
 			set json = {}.%FromJSON(response.StringValue)
+			set $list(patientIDList,*+1) = json.ID
+			write !, patientIDList
 			zwrite response
 			write !,"Created ID "_json.ID
 		}
-
 	}		
-	quit sc
+	//quit sc
+	return patientIDList
 }
 
 ClassMethod ListInsurance()
 {
+	set ResultList = ##class(%ListOfDataTypes).%New()
+
 	set request = ##class(CDUI.Demo.Request.ReqInsTables).%New()
 	set sc = ##class(Ens.Director).CreateBusinessService("CDUI.Demo.Service.Adaptorless",.svc)
 	set sc = $$$ADDSC(sc,svc.ProcessInput(request,.response))
 	if $$$ISOK(sc)
 	{
 		set json = {}.%FromJSON(response.StringValue)
+		set results = json.results
 		set iterator = json.results.%GetIterator()
 		while iterator.%GetNext(.key,.value)
 		{	
 			set innerList = $LISTBUILD(value.AUXITDesc,value.AUXITInsTypeDR)
-			set $LIST(testList,key) = innerList		
+			do ResultList.insert()		
 		}
 		set InsuranceTable = testList
 		write $LIST(InsuranceTable,1)
@@ -119,8 +123,8 @@ ClassMethod NewEpisode()
 	set PatientID = "testid"
 	set CTLOCDesc = "Admissions H1"
 	set PAADMType = "E"
-	set PAADMAdmDate = "20/10/2022"
-	set PAADMAdmTime = "testtime"
+	set PAADMAdmDate = ##class(%PopulateUtils).Date()
+	set PAADMAdmTime = "64800"
 
 	set request = ##class(CDUI.Demo.Request.NewEpisode).%New()
 	set request.PatientID = PatientID
