@@ -3,10 +3,13 @@ Include %syPrompt
 Class CDUI.Demo.Test
 {
 
-ClassMethod List(StartsWith As %String = "", PageSize As %Integer = "", ByRef Page As %Integer = "", ByRef Results) As %Status
+ClassMethod GetLocation(StartsWith As %String = "", LocationTypeID As %String = "", PageSize As %Integer = "", ByRef Page As %Integer = "", ByRef ResultsList) As %Status
 {
 	set request = ##class(CDUI.Demo.Request.Location).%New()
-	set request.Description = StartsWith
+	if StartsWith '=""
+	{
+		set request.Description = StartsWith
+	}	
 	if Page'=""
 	{
 		set request.page = Page
@@ -15,7 +18,14 @@ ClassMethod List(StartsWith As %String = "", PageSize As %Integer = "", ByRef Pa
 	{
 		set request.count = PageSize
 	}
+	if LocationTypeID '=""
+	{
+		set request.LocationTypeID = LocationTypeID
+	}
 	#; ,request.HospitalDesc = Desc
+	set ResultsList = ##class(%ListOfObjects).%New() 
+	set currentDate = $PIECE($HOROLOG,",",1)
+
 	set sc = ##class(Ens.Director).CreateBusinessService("CDUI.Demo.Service.Adaptorless",.svc)
 	set sc = $$$ADDSC(sc,svc.ProcessInput(request,.response))
 
@@ -25,25 +35,43 @@ ClassMethod List(StartsWith As %String = "", PageSize As %Integer = "", ByRef Pa
 		set iterator = json.results.%GetIterator()
 		while iterator.%GetNext(.key,.value)
 		{	
-			set Results($increment(Results)) = $listbuild(value.CTLOCCode,value.CTLOCDesc)
+			if (((value.CTLOCDateActiveFrom <= currentDate) && (value.CTLOCDateActiveTo = ""))||(value.CTLOCDateActiveTo >= currentDate))
+			{
+				do ResultsList.Insert(value)
+			}
+
 		}
+		#; write ResultsList.Count()
+		#; write !, ResultsList.GetAt(1).CTLOCCode
 	}
 	quit sc
 }
 
-ClassMethod ListLocations()
-{
-	set promptResult = ##class(%Prompt).GetString("Search for location starting with : ",.value)
-	set sc = ..List(value,24,.page,.results)
-	set i = ""
-	for
-	{
-		set i = $order(results(i),1,location)
-		quit:i=""
-		set code = $listget(location),codelen = $length(code)
-		write !,$listget(location,1)_$justify("",(15-codelen))_" : "_$listget(location,2)
-	}
-}
+// ClassMethod ListLocations()
+
+// {
+
+// 	set promptResult = ##class(%Prompt).GetString("Search for location starting with : ",.value)
+
+// 	set sc = ..List(value,24,.page,.results)
+
+// 	set i = ""
+
+// 	for
+
+// 	{
+
+// 		set i = $order(results(i),1,location)
+
+// 		quit:i=""
+
+// 		set code = $listget(location),codelen = $length(code)
+
+// 		write !,$listget(location,1)_$justify("",(15-codelen))_" : "_$listget(location,2)
+
+// 	}
+
+// }
 
 ClassMethod NewLocation()
 {
@@ -66,13 +94,13 @@ ClassMethod NewPatient() As %List
 	set patientIDList = $LISTBUILD()
 	set sc = ..ListInsurance(.insuranceList)
 	for i = 1:1:3{
-		set PAPERName = ##class(%PopulateUtils).FirstName() //ID: 11480
+		set PAPERName = ##class(%PopulateUtils).FirstName() 
 		set PAPERName2 = ##class(%PopulateUtils).LastName()
+		//TODO:generate CTSEXDesc randomly
 		set CTSEXDesc = "Female"
+		//TODO:generate PatientDOB randomly, PatientDOB cannot pass current date
 		set PAPERDob = "10/2/2000"
-		//set INSTDesc = "BUPA Australia"
 		set insuranceRecord = insuranceList.GetAt(##class(%PopulateUtils).Random(insuranceList.Count()-1) + 1)
-		//set AUXITDesc = "BUP Basic"
 
 		set request = ##class(CDUI.Demo.Request.NewPatient).%New()
 		set request.PAPERName = PAPERName
@@ -88,7 +116,7 @@ ClassMethod NewPatient() As %List
 		{
 			set json = {}.%FromJSON(response.StringValue)
 			set $list(patientIDList,*+1) = json.ID
-			write !, patientIDList
+			write !, patientIDList, !
 			zwrite response
 			write !,"Created ID "_json.ID
 		}
@@ -114,13 +142,14 @@ ClassMethod ListInsurance(ByRef resultList) As %Status
 			do resultList.Insert(value)		
 		}
 	}
-	write !, resultList.GetAt(1).AUXITInsTypeDR
-	write !, resultList.Count()
 	quit sc
 }
 
 ClassMethod NewEpisode()
 {
+	set currentDate = $PIECE($HOROLOG,",",1)
+	set currentTime = $PIECE($HOROLOG,",",2)
+	
 	set PatientID = "testid"
 	set CTLOCDesc = "Admissions H1"
 	set PAADMType = "E"
