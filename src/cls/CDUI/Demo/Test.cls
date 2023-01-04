@@ -1,3 +1,5 @@
+Import (CDUI.Demo.Common, CDUI.Demo.Utils)
+
 Include %syPrompt
 
 Class CDUI.Demo.Test
@@ -99,8 +101,8 @@ ClassMethod NewPatient(Count As %Integer = 1, ByRef PatientIDList) As %Status
 		set CTSEXDesc = "Female"
 		//TODO:generate PatientDOB randomly, PatientDOB cannot pass current date
 		set PAPERDob = "10/2/2000"
-		set insuranceRecord = insuranceList.GetAt(##class(%PopulateUtils).Random(insuranceList.Count()-1) + 1)
-
+		set insuranceRecord = ##class(CDUI.Demo.Utils.PUtils).RdListElement(insuranceList)
+		write !,insuranceRecord.AUXITDesc
 		set request = ##class(CDUI.Demo.Request.NewPatient).%New()
 		set request.PAPERName = PAPERName
 		set request.PAPERName2 = PAPERName2
