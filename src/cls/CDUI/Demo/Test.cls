@@ -3,7 +3,7 @@ Include %syPrompt
 Class CDUI.Demo.Test
 {
 
-ClassMethod GetLocation(StartsWith As %String = "", LocationTypeID As %String = "", PageSize As %Integer = "", ByRef Page As %Integer = "", ByRef ResultsList) As %Status
+ClassMethod GetLocation(StartsWith As %String = "", LocationTypeID As %String = "", Active As %String = "", PageSize As %Integer = "", ByRef Page As %Integer = "", ByRef ResultsList) As %Status
 {
 	set request = ##class(CDUI.Demo.Request.Location).%New()
 	if StartsWith '=""
@@ -22,9 +22,12 @@ ClassMethod GetLocation(StartsWith As %String = "", LocationTypeID As %String = 
 	{
 		set request.LocationTypeID = LocationTypeID
 	}
+	if Active '=""
+	{
+		set request.Active = Active
+	}
 	#; ,request.HospitalDesc = Desc
 	set ResultsList = ##class(%ListOfObjects).%New() 
-	set currentDate = $PIECE($HOROLOG,",",1)
 
 	set sc = ##class(Ens.Director).CreateBusinessService("CDUI.Demo.Service.Adaptorless",.svc)
 	set sc = $$$ADDSC(sc,svc.ProcessInput(request,.response))
@@ -35,11 +38,7 @@ ClassMethod GetLocation(StartsWith As %String = "", LocationTypeID As %String = 
 		set iterator = json.results.%GetIterator()
 		while iterator.%GetNext(.key,.value)
 		{	
-			if (((value.CTLOCDateActiveFrom <= currentDate) && (value.CTLOCDateActiveTo = ""))||(value.CTLOCDateActiveTo >= currentDate))
-			{
-				do ResultsList.Insert(value)
-			}
-
+			do ResultsList.Insert(value)
 		}
 		#; write ResultsList.Count()
 		#; write !, ResultsList.GetAt(1).CTLOCCode
@@ -73,7 +72,7 @@ ClassMethod GetLocation(StartsWith As %String = "", LocationTypeID As %String = 
 
 // }
 
-ClassMethod NewLocation()
+ClassMethod NewLocation() As %Status
 {
 	set CTLOCCode = "Z"_##class(%PopulateUtils).String(5)
 	set CTLOCDesc = $zconvert($translate(##class(%PopulateUtils).Syllable(10)," "),"S")
@@ -89,11 +88,11 @@ ClassMethod NewLocation()
 	quit sc
 }
 
-ClassMethod NewPatient() As %List
+ClassMethod NewPatient(Count As %Integer = 1, ByRef PatientIDList) As %Status
 {
-	set patientIDList = $LISTBUILD()
-	set sc = ..ListInsurance(.insuranceList)
-	for i = 1:1:3{
+	set PatientIDList = $LISTBUILD()
+	set sc = ..ListInsurance("Y",,,.insuranceList)
+	for i = 1:1:Count{
 		set PAPERName = ##class(%PopulateUtils).FirstName() 
 		set PAPERName2 = ##class(%PopulateUtils).LastName()
 		//TODO:generate CTSEXDesc randomly
@@ -115,21 +114,32 @@ ClassMethod NewPatient() As %List
 		if $$$ISOK(sc)
 		{
 			set json = {}.%FromJSON(response.StringValue)
-			set $list(patientIDList,*+1) = json.ID
-			write !, patientIDList, !
+			// append each new patient ID to the end of the patientIDList
+			set $list(PatientIDList,*+1) = json.ID
+			write !, PatientIDList, !
 			zwrite response
-			write !,"Created ID "_json.ID
+			write !,"Created Patient Row ID "_json.ID
 		}
 	}		
-	//quit sc
-	return patientIDList
+	quit sc
 }
 
-ClassMethod ListInsurance(ByRef resultList) As %Status
+ClassMethod ListInsurance(Active As %String = "", PageSize As %Integer = "", ByRef Page As %Integer = "", ByRef ResultsList) As %Status
 {
-	set resultList = ##class(%ListOfObjects).%New()
-
 	set request = ##class(CDUI.Demo.Request.ReqInsTables).%New()
+	if Active '= ""
+	{
+		set request.Active = Active
+	}
+	if PageSize '= ""
+	{
+		set request.PageSize = PageSize
+	}
+	if Page '=""
+	{
+		set request.Page = Page
+	}
+	set ResultsList = ##class(%ListOfObjects).%New()
 	set sc = ##class(Ens.Director).CreateBusinessService("CDUI.Demo.Service.Adaptorless",.svc)
 	set sc = $$$ADDSC(sc,svc.ProcessInput(request,.response))
 	if $$$ISOK(sc)
@@ -139,18 +149,23 @@ ClassMethod ListInsurance(ByRef resultList) As %Status
 		set iterator = json.results.%GetIterator()
 		while iterator.%GetNext(.key,.value)
 		{	
-			do resultList.Insert(value)		
+			do ResultsList.Insert(value)		
 		}
+		#; write ResultsList.Count()
+		#; write !, ResultsList.GetAt(1).AUXITRowId
 	}
 	quit sc
 }
 
-ClassMethod NewEpisode()
+ClassMethod NewEpisode(Count As %Integer = 1, ByRef EpisodeIDList) As %Status
 {
+	set sc1 = ..GetLocation(,"E","A",,,.locationList)
+	set sc2 = ..NewPatient(3,.patientList)
+	set EpisodeIDList = ##class(%ListOfDataTypes).%New()
 	set currentDate = $PIECE($HOROLOG,",",1)
 	set currentTime = $PIECE($HOROLOG,",",2)
 	
-	set PatientID = "testid"
+	set PatientID = patientList.GetAt(##class(%PopulateUtils).Random(patientList.Count()-1) + 1)
 	set CTLOCDesc = "Admissions H1"
 	set PAADMType = "E"
 	set PAADMAdmDate = ##class(%PopulateUtils).Date()
