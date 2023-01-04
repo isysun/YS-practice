@@ -92,20 +92,19 @@ ClassMethod NewLocation() As %Status
 
 ClassMethod NewPatient(Count As %Integer = 1, ByRef PatientIDList) As %Status
 {
-	set PatientIDList = $LISTBUILD()
+	//set PatientIDList = $LISTBUILD()
+	set PatientIDList = ##class(%ListOfDataTypes).%New()
 	set sc = ..ListInsurance("Y",,,.insuranceList)
-	for i = 1:1:Count{
-		set PAPERName = ##class(%PopulateUtils).FirstName() 
-		set PAPERName2 = ##class(%PopulateUtils).LastName()
+	for i = 1:1:Count{ 
 		//TODO:generate CTSEXDesc randomly
 		set CTSEXDesc = "Female"
 		//TODO:generate PatientDOB randomly, PatientDOB cannot pass current date
 		set PAPERDob = "10/2/2000"
-		set insuranceRecord = ##class(CDUI.Demo.Utils.PUtils).RdListElement(insuranceList)
-		write !,insuranceRecord.AUXITDesc
+		set insuranceRecord = ##class(PUtils).RdListElement(insuranceList)
+		//write !,insuranceRecord.AUXITDesc
 		set request = ##class(CDUI.Demo.Request.NewPatient).%New()
-		set request.PAPERName = PAPERName
-		set request.PAPERName2 = PAPERName2
+		set request.PAPERName = ##class(%PopulateUtils).FirstName()
+		set request.PAPERName2 = ##class(%PopulateUtils).LastName()
 		set request.CTSEXDesc = CTSEXDesc
 		set request.PAPERDob = PAPERDob
 		set request.INSTDesc = insuranceRecord.AUXITInsTypeDR
@@ -113,14 +112,18 @@ ClassMethod NewPatient(Count As %Integer = 1, ByRef PatientIDList) As %Status
 
 		set sc = ##class(Ens.Director).CreateBusinessService("CDUI.Demo.Service.Adaptorless",.svc)
 		set sc = $$$ADDSC(sc,svc.ProcessInput(request,.response))
+		set json = {}.%FromJSON(response.StringValue)
 		if $$$ISOK(sc)
 		{
-			set json = {}.%FromJSON(response.StringValue)
-			// append each new patient ID to the end of the patientIDList
-			set $list(PatientIDList,*+1) = json.ID
-			write !, PatientIDList, !
-			zwrite response
-			write !,"Created Patient Row ID "_json.ID
+			if json.ERROR = ""{
+				//set $list(PatientIDList, *+1) = json.ID
+				do PatientIDList.Insert(json.ID)
+				//write !,"Created Patient Row ID "_json.ID
+			}
+			#; set $list(PatientIDList,*+1) = json.ID
+			#; write !, PatientIDList, !
+			#; zwrite response
+			#; write !,"Created Patient Row ID "_json.ID
 		}
 	}		
 	quit sc
@@ -161,32 +164,44 @@ ClassMethod ListInsurance(Active As %String = "", PageSize As %Integer = "", ByR
 
 ClassMethod NewEpisode(Count As %Integer = 1, ByRef EpisodeIDList) As %Status
 {
-	set sc1 = ..GetLocation(,"E","A",,,.locationList)
+	//generate locationList and patientList
+	set sc1 = ..GetLocation(,"E","Y",,,.locationList)
 	set sc2 = ..NewPatient(3,.patientList)
+	#; write !,locationList
+	#; write !, patientList
+	//zw patientList
+	//generate empty list to store episode id
 	set EpisodeIDList = ##class(%ListOfDataTypes).%New()
 	set currentDate = $PIECE($HOROLOG,",",1)
 	set currentTime = $PIECE($HOROLOG,",",2)
 	
-	set PatientID = patientList.GetAt(##class(%PopulateUtils).Random(patientList.Count()-1) + 1)
-	set CTLOCDesc = "Admissions H1"
-	set PAADMType = "E"
-	set PAADMAdmDate = ##class(%PopulateUtils).Date()
-	set PAADMAdmTime = "64800"
+	for i = 1:1:Count{
+		set PatientID = ##class(CDUI.Demo.Utils.PUtils).RdListElement(patientList)
+		//set PatientID = patientList.GetAt(1)
+		set CTLOCDesc = ##class(CDUI.Demo.Utils.PUtils).RdListElement(locationList).CTLOCDesc
+		//set CTLOCDesc = locationList.GetAt(##class(%PopulateUtils).Random(locationList.Count()-1) + 1)
+		set PAADMType = "E"
+		set PAADMAdmDate = ##class(%PopulateUtils).Date()
+		set PAADMAdmTime = "64800"
 
-	set request = ##class(CDUI.Demo.Request.NewEpisode).%New()
-	set request.PatientID = PatientID
-	set request.CTLOCDesc = CTLOCDesc
-	set request.PAADMType = PAADMType
-	set request.PAADMAdmDate = PAADMAdmDate
-	set request.PAADMAdmTime = PAADMAdmTime
+		set request = ##class(CDUI.Demo.Request.NewEpisode).%New()
+		set request.PatientID = PatientID
+		set request.CTLOCDesc = CTLOCDesc
+		set request.PAADMType = PAADMType
+		set request.PAADMAdmDate = PAADMAdmDate
+		set request.PAADMAdmTime = PAADMAdmTime
 
-	set sc = ##class(Ens.Director).CreateBusinessService("CDUI.Demo.Service.Adaptorless",.svc)
-	set sc = $$$ADDSC(sc,svc.ProcessInput(request,.response))
-	if $$$ISOK(sc)
-	{
-		set json = {}.%FromJSON(response.StringValue)
-		zwrite response
-		write !,"Created ID "_json.ID
+		set sc = ##class(Ens.Director).CreateBusinessService("CDUI.Demo.Service.Adaptorless",.svc)
+		set sc = $$$ADDSC(sc,svc.ProcessInput(request,.response))
+		if $$$ISOK(sc)
+		{
+			set json = {}.%FromJSON(response.StringValue)
+			if json.ERROR = ""{
+				do EpisodeIDList.Insert(json.ID)
+				zwrite response
+				write !,"Created ID "_json.ID
+			}
+		}
 	}
 }
 
