@@ -97,9 +97,9 @@ ClassMethod NewPatient(Count As %Integer = 1, ByRef PatientIDList) As %Status
 	set sc = ..ListInsurance("Y",,,.insuranceList)
 	for i = 1:1:Count{ 
 		//TODO:generate CTSEXDesc randomly
-		set CTSEXDesc = "Female"
+		set CTSEXDesc = ##class(PUtils).RdSEX()
 		//TODO:generate PatientDOB randomly, PatientDOB cannot pass current date
-		set PAPERDob = "10/2/2000"
+		set PAPERDob = ##class(PUtils).RdDOB()
 		set insuranceRecord = ##class(PUtils).RdListElement(insuranceList)
 		//write !,insuranceRecord.AUXITDesc
 		set request = ##class(CDUI.Demo.Request.NewPatient).%New()
@@ -116,14 +116,12 @@ ClassMethod NewPatient(Count As %Integer = 1, ByRef PatientIDList) As %Status
 		if $$$ISOK(sc)
 		{
 			if json.ERROR = ""{
-				//set $list(PatientIDList, *+1) = json.ID
 				do PatientIDList.Insert(json.ID)
-				//write !,"Created Patient Row ID "_json.ID
+				#; zwrite response
+				#; w !, request.PAPERName
+				#; w !, request.PAPERName2
+				#; w !, request.PAPERDob
 			}
-			#; set $list(PatientIDList,*+1) = json.ID
-			#; write !, PatientIDList, !
-			#; zwrite response
-			#; write !,"Created Patient Row ID "_json.ID
 		}
 	}		
 	quit sc
@@ -167,29 +165,19 @@ ClassMethod NewEpisode(Count As %Integer = 1, ByRef EpisodeIDList) As %Status
 	//generate locationList and patientList
 	set sc1 = ..GetLocation(,"E","Y",,,.locationList)
 	set sc2 = ..NewPatient(3,.patientList)
-	#; write !,locationList
-	#; write !, patientList
-	//zw patientList
 	//generate empty list to store episode id
 	set EpisodeIDList = ##class(%ListOfDataTypes).%New()
-	set currentDate = $PIECE($HOROLOG,",",1)
-	set currentTime = $PIECE($HOROLOG,",",2)
 	
 	for i = 1:1:Count{
-		set PatientID = ##class(CDUI.Demo.Utils.PUtils).RdListElement(patientList)
-		//set PatientID = patientList.GetAt(1)
-		set CTLOCDesc = ##class(CDUI.Demo.Utils.PUtils).RdListElement(locationList).CTLOCDesc
-		//set CTLOCDesc = locationList.GetAt(##class(%PopulateUtils).Random(locationList.Count()-1) + 1)
-		set PAADMType = "E"
-		set PAADMAdmDate = ##class(%PopulateUtils).Date()
-		set PAADMAdmTime = "64800"
+		set PAADMType = ##class(PUtils).RdAdmType()
+		set CTLOCDesc = ##class(PUtils).RdListElement(locationList).CTLOCDesc
 
 		set request = ##class(CDUI.Demo.Request.NewEpisode).%New()
-		set request.PatientID = PatientID
+		set request.PatientID = ##class(PUtils).RdListElement(patientList)
 		set request.CTLOCDesc = CTLOCDesc
 		set request.PAADMType = PAADMType
-		set request.PAADMAdmDate = PAADMAdmDate
-		set request.PAADMAdmTime = PAADMAdmTime
+		set request.PAADMAdmDate = ##class(PUtils).RdAdmDate()
+		set request.PAADMAdmTime = ##class(PUtils).RdTime()
 
 		set sc = ##class(Ens.Director).CreateBusinessService("CDUI.Demo.Service.Adaptorless",.svc)
 		set sc = $$$ADDSC(sc,svc.ProcessInput(request,.response))
@@ -200,9 +188,24 @@ ClassMethod NewEpisode(Count As %Integer = 1, ByRef EpisodeIDList) As %Status
 				do EpisodeIDList.Insert(json.ID)
 				zwrite response
 				write !,"Created ID "_json.ID
+				write !, EpisodeIDList.GetAt(1)
+			}
+			else{
+				write "An error occurs!"_json.ERROR
 			}
 		}
 	}
+	quit sc
+}
+
+ClassMethod GetItems(PageSize As %Integer = "", ByRef Page As %Integer = "", Output ResultsList)
+{
+}
+
+ClassMethod NewOrder(Count As %Integer, Output OrderIDList) As %Status
+{
+	//generate new episodes for the order
+	set sc1 = ..NewEpisode(1,)
 }
 
 }
