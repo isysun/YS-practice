@@ -2,7 +2,7 @@ Import (CDUI.Demo.Common, CDUI.Demo.Utils)
 
 Include %syPrompt
 
-Class CDUI.Demo.Test
+Class CDUI.Demo.Test Extends Ens.Util.IOLogger
 {
 
 ClassMethod GetLocation(StartsWith As %String = "", LocationTypeID As %String = "", Active As %String = "", PageSize As %Integer = "", ByRef Page As %Integer = "", ByRef ResultsList) As %Status
@@ -200,6 +200,39 @@ ClassMethod NewEpisode(Count As %Integer = 1, ByRef EpisodeIDList) As %Status
 
 ClassMethod GetItems(PageSize As %Integer = "", ByRef Page As %Integer = "", Output ResultsList)
 {
+	set request = ##class(CDUI.Demo.Request.OrderItems).%New()
+	set ResultsList = ##class(%ListOfObjects).%New()
+	if PageSize '= ""{
+		set request.count = PageSize
+	}
+	if Page '= ""{
+		set request.page = Page
+	}
+
+	//start service call
+	$$$LOGINFO("[GetItems] BS is initiated")
+	Try 
+	{
+		set sc = ##class(Ens.Director).CreateBusinessService("CDUI.Demo.Service.Adaptorless",.svc)
+		set sc = $$$ADDSC(sc,svc.ProcessInput(request,.response))
+		if $$$ISOK(sc)
+		{
+			set json = {}.%FromJSON(response.StringValue)
+			set iterator = json.results.%GetIterator()
+			while iterator.%GetNext(.key,.value){
+				do ResultsList.Insert(value)
+			}
+		}
+		else{
+			$$$LOGERROR("[GetItems] Failed to retrive items. Error(sc):"_$System.Status.DisplayError(sc))
+		}
+		$$$LOGINFO("[GetItems] Successfully retrive items. Sample item:"_ResultsList.GetAt(1).ARCIMDesc)
+	}
+	catch ex
+	{
+		$$$LOGERROR("[GetItems] Failed to retrive items. Error(Ex):"_ex.DisplayString())
+	}
+	quit sc
 }
 
 ClassMethod NewOrder(Count As %Integer, Output OrderIDList) As %Status
